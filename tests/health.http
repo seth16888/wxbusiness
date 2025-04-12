@@ -1,0 +1,9 @@
+@host=http://127.0.0.1:10200
+
+###
+# @name health
+GET {{host}}/health
+
+###
+# @name ping
+GET {{host}}/ping

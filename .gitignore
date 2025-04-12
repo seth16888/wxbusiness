@@ -1,0 +1,55 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+go.sum  # 忽略Go模块的依赖项校验和文件
+go.mod  # 忽略Go模块的依赖项管理文件
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment files
+.env
+.env.local
+
+# Log files
+*.log
+
+# Build output
+bin/
+dist/
+build/  # 常见的Go项目构建输出目录
+
+# Debug files
+debug
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Database files
+*.db
+*.sqlite
+
+# Go cache and build cache
+.gocache/  # 忽略Go的缓存目录
+.cache/    # 可能的其他缓存目录
+
+.lingma/

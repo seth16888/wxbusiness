@@ -1,0 +1,36 @@
+server:
+  addr: 127.0.0.1:10200
+  read_timeout: 5s
+  write_timeout: 5s
+  idle_timeout: 120s
+  max_header_bytes: 1048576
+  keep_alive: true
+log:
+  level: debug
+  filename: app.log
+  max_size: 100
+  max_age: 30
+  max_backups: 10
+  compress: false
+Jwt:
+  SignKey: erw1234#DFaopud567890add
+  Issuer: coauth
+  ExpireTime: 120
+  MaxRefreshTime: 86400
+db:
+  driver: mysql
+  source: root:123456@tcp(127.0.0.1:13306)/coauth?charset=utf8mb4&parseTime=True&loc=Local
+  log_level: info
+  table_prefix:
+  singular_table: true
+  prepare_stmt: true
+  allow_global_update: false
+  max_open_conns: 100
+  max_idle_conns: 100
+  conn_max_lifetime: 3600
+redis:
+  addr: 127.0.0.1:6379
+  username:
+  password:
+  db: 0
+
