@@ -15,3 +15,19 @@ Authorization: Bearer {{token}}
   "appSecret": "7fb747052d1f2055413fa6eb0fbe0944",
   "type": 1
 }
+
+
+###
+# @name createApp2
+POST {{host}}/platform/apps
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "蓝鲸小精灵",
+  "introduction": "gh_28b76d98bc00,蓝鲸小精灵",
+  "picUrl": "https://wx.qlogo.cn/mmopen/JCrT0AX1L5ibricJKIia0O48pibBicpJ9p2WfwQNmmicJRULyxo6XSJnBs11SgrCVVKQIDoR0iasNqhFLJibuQ8VCIrSPyRr19Jiau2os/64",
+  "appId": "wx6898b2ec34091597",
+  "appSecret": "da5a265561ed02903fdf7bc923026c2c",
+  "type": 1
+}

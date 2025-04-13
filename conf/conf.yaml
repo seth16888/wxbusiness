@@ -21,7 +21,7 @@ db:
   driver: mongodb
   source: mongodb://127.0.0.1:27017
   log_level: info
-  database_name: wxbisness
+  database_name: wxbusiness
   max_pool_size: 10
   min_pool_size: 3
   max_idle_time: 3600

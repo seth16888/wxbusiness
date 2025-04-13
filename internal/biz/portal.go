@@ -3,7 +3,10 @@ package biz
 import (
 	"context"
 	"errors"
+	"fmt"
+	"time"
 
+	"github.com/seth16888/wxbusiness/internal/data/entities"
 	"github.com/seth16888/wxbusiness/pkg/logger"
 	wx "github.com/seth16888/wxcommon/helpers"
 	"go.uber.org/zap"
@@ -47,8 +50,10 @@ func (p *PortalUsecase) Verify(ctx context.Context, appId string, timestamp stri
 			return "", err
 		}
 
-		// 获取一次Access Token
-		_, err := p.tokenProxy.FetchAccessToken(ctx, appId, appInfo.AppId)
+    ctxTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
+    defer cancel()
+    // 获取一次Access Token
+		_, err := p.tokenProxy.FetchAccessToken(ctxTimeout, appId, appInfo.AppId)
 		if err != nil {
 			logger.Errorf("fetch access token error,%s: %s", err.Error(), appId)
 			return "", err
@@ -57,4 +62,13 @@ func (p *PortalUsecase) Verify(ctx context.Context, appId string, timestamp stri
 
 	logger.Debugf("verify success: %s", appId)
 	return echostr, nil
+}
+
+// GetMpApp
+func (p *PortalUsecase) GetMpApp(ctx context.Context, appId string) (*entities.PlatformApp, error) {
+  app, err:= p.repo.Get(ctx, appId)
+  if err != nil {
+    return nil, fmt.Errorf("data not found")
+  }
+  return app, nil
 }

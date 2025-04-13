@@ -18,6 +18,16 @@ type PlatformAppData struct {
 	log    *zap.Logger
 }
 
+// GetByMPId retrieves a Platform App by its MPId
+func (p *PlatformAppData) GetByMPId(ctx context.Context, mpId string) (*entities.PlatformApp, error) {
+	filter := bson.M{"app_id": mpId}
+	app := &entities.PlatformApp{}
+	if err := p.col.FindOne(ctx, filter).Decode(app); err != nil {
+		return nil, err
+	}
+	return app, nil
+}
+
 // Create adds a new Platform App
 func (p *PlatformAppData) Create(ctx context.Context, app *entities.PlatformApp) (string, error) {
 	// MongoDB会自动生成_id

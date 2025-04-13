@@ -28,3 +28,19 @@ type CreateAppReq struct {
 	Type         int64  `json:"type" binding:"required"`
 }
 
+// PortalMessageReq 微信推送消息
+type PortalMessageReq struct {
+	AppID        string `json:"appId" form:"appId"`
+	Signature    string `json:"signature" form:"signature"`
+	Nonce        string `json:"nonce" form:"nonce"`
+	Timestamp    string `json:"timestamp" form:"timestamp"`
+	MsgSignature string `json:"msg_signature" form:"msg_signature"`
+	EncryptType  string `json:"encryptType" form:"encrypt_type"`
+	OpenID       string `json:"openid" form:"openid"`
+}
+
+// EncryptMessageReq 加密消息
+type EncryptMessageReq struct {
+	ToUserName string `json:"ToUserName" form:"ToUserName" xml:"ToUserName"`
+	Encrypt    string `json:"encrypt" form:"encrypt" xml:"Encrypt"`
+}

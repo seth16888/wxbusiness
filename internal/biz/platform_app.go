@@ -18,6 +18,7 @@ type PlatformAppRepo interface {
 	// Delete(ctx context.Context, id string) error
 	// List(ctx context.Context, userId uint64) ([]*entities.PlatformApp, error)
 	UpdateStatus(ctx context.Context, id string, status int) error
+  GetByMPId(ctx context.Context, appId string) (*entities.PlatformApp, error)
 }
 
 type PlatformAppUsecase struct {
