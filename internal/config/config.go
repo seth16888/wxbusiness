@@ -9,11 +9,17 @@ import (
 )
 
 type Conf struct {
-	Server *server.ServerConf
-	Log    *logger.LogConfig
-	Redis  *RedisConfig
-	DB     *database.DatabaseConfig
-	Jwt    *Jwt
+	Server      *server.ServerConf
+	Log         *logger.LogConfig
+	Redis       *RedisConfig
+	DB          *database.DatabaseConfig
+	Jwt         *Jwt
+	TokenServer *TokenServer  `mapstructure:"token_server"`
+}
+
+// TokenServer token server配置
+type TokenServer struct {
+	Addr string
 }
 
 // redis配置

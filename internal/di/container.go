@@ -1,13 +1,15 @@
 package di
 
 import (
+	"github.com/seth16888/wxbusiness/internal/biz"
 	"github.com/seth16888/wxbusiness/internal/config"
-	"github.com/seth16888/wxbusiness/internal/database"
+	"github.com/seth16888/wxbusiness/internal/data"
 	"github.com/seth16888/wxbusiness/internal/handler"
 	"github.com/seth16888/wxbusiness/internal/server"
-	"github.com/seth16888/wxbusiness/pkg/logger"
+	"github.com/seth16888/wxbusiness/pkg/jwt"
+	"github.com/seth16888/wxbusiness/pkg/validator"
+	v1 "github.com/seth16888/wxtoken/api/v1"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 )
 
 var di *Container
@@ -24,29 +26,14 @@ func Get() *Container {
 }
 
 type Container struct {
-	Conf          *config.Conf // 配置文件
-	DB            *gorm.DB     // 数据库连接
-	Log           *zap.Logger
-	Server        *server.Server
-	HealthHandler *handler.HealthHandler
-}
-
-func NewContainer(configFile string) *Container {
-	conf := config.ReadConfigFromFile(configFile)
-	log := logger.InitLogger(conf.Log)
-
-	db, err := database.NewDB(conf.DB)
-	if err != nil {
-		log.Fatal("failed to connect database", zap.Error(err))
-	}
-
-	healthHandler := handler.NewHealthHandler()
-
-	di = &Container{
-		Conf:          conf,
-		DB:            db,
-		Log:           log,
-		HealthHandler: healthHandler,
-	}
-	return di
+	Conf               *config.Conf // 配置文件
+	DB                 *data.Data   // 数据库连接
+	Log                *zap.Logger
+	JWT                *jwt.JWTService
+	Server             *server.Server
+	HealthHandler      *handler.HealthHandler
+	TokenClient        v1.TokenClient
+	Validator          *validator.Validator
+	PortalUsecase      *biz.PortalUsecase
+	PlatformAppUsecase *biz.PlatformAppUsecase
 }

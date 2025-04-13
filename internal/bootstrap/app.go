@@ -9,9 +9,9 @@ import (
 	"go.uber.org/zap"
 )
 
-func StartApp() error {
-	srv := InitServer(di.Get().Conf, di.Get().Log)
-	di.Get().Server = srv
+func StartApp(deps *di.Container) error {
+	srv := InitServer(deps)
+	deps.Server = srv
 
 	// Run server
 	errChan := make(chan error, 1)
@@ -19,7 +19,7 @@ func StartApp() error {
 
 	quitFunc := func() {
 		srv.Shutdown()
-		di.Get().Log.Info("Server shutdown completed")
+		deps.Log.Info("Server shutdown completed")
 	}
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
@@ -28,7 +28,7 @@ func StartApp() error {
 		quitFunc()
 		return nil
 	case err := <-errChan:
-		di.Get().Log.Error("Server error", zap.Error(err))
+		deps.Log.Error("Server error", zap.Error(err))
 		quitFunc()
 		return err
 	}

@@ -1,0 +1,17 @@
+@host=http://localhost:8001/v1
+@token= 12312231123
+
+###
+# @name createApp
+POST {{host}}/platform/apps
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "test-app",
+  "introduction": "gh_9aaf412a5483,This is a test app",
+  "picUrl": "https://example.com",
+  "appId": "wx4c187683539f414d",
+  "appSecret": "7fb747052d1f2055413fa6eb0fbe0944",
+  "type": 1
+}
