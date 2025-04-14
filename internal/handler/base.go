@@ -21,3 +21,14 @@ func (b *Base) GetUserId(c *gin.Context) (string, error) {
   }
   return id, nil
 }
+
+// GetPID 获取应用ID
+//
+// c.Param("id") 路径参数，平台应用ID
+func (b *Base) GetPID(c *gin.Context) (string, error) {
+  appID := c.Param("id")
+  if len(appID) == 0 {
+    return "", fmt.Errorf("invalid appid")
+  }
+  return appID, nil
+}

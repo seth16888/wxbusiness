@@ -36,4 +36,5 @@ type Container struct {
 	Validator          *validator.Validator
 	PortalUsecase      *biz.PortalUsecase
 	PlatformAppUsecase *biz.PlatformAppUsecase
+	MenuUsecase        *biz.MPMenuUsecase
 }

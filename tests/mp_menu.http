@@ -1,0 +1,44 @@
+@host=http://localhost:8001/v1
+@token= 12312231123
+
+@pid=67fa7fc1dcee38496e2cf6b1
+###
+# @name CreateMenu
+POST {{host}}/app/{{pid}}/menu
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "button": [
+    {
+      "name": "菜单6",
+      "sub_button": [
+        {
+          "type": "click",
+          "name": "子菜单1-1",
+          "key": "V1001_TODAY_MUSIC"
+        },
+        {
+          "type": "click",
+          "name": "子菜单1-2",
+          "key": "V1001_TODAY_MUSIC"
+        }
+      ]
+    },
+    {
+      "name": "菜单7",
+      "sub_button": [
+        {
+          "type": "click",
+          "name": "子菜单2-1",
+          "key": "V1001_TODAY_MUSIC"
+        },
+        {
+          "type": "click",
+          "name": "子菜单2-2",
+          "key": "V1001_TODAY_MUSIC"
+        }
+      ]
+    }
+  ]
+}

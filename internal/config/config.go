@@ -14,11 +14,17 @@ type Conf struct {
 	Redis       *RedisConfig
 	DB          *database.DatabaseConfig
 	Jwt         *Jwt
-	TokenServer *TokenServer  `mapstructure:"token_server"`
+	TokenServer *TokenServer `mapstructure:"token_server"`
+	ProxyServer *ProxyServer `mapstructure:"proxy_server"`
 }
 
 // TokenServer token server配置
 type TokenServer struct {
+	Addr string
+}
+
+// ProxyServer proxy server配置
+type ProxyServer struct {
 	Addr string
 }
 

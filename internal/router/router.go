@@ -43,8 +43,21 @@ func registerRoutes(r *gin.Engine, deps *di.Container) {
 
     platform := v1.Group("/platform")
     {
-      platformAppHdl := handler.NewPlatformAppHandler(deps.Log, deps.Validator, deps.PlatformAppUsecase)
+      platformAppHdl := handler.NewPlatformAppHandler(deps.Log,
+        deps.Validator, deps.PlatformAppUsecase)
       platform.POST("/apps", platformAppHdl.Create)
+    }
+
+    appGrp := v1.Group("/app")
+    {
+      app:= appGrp.Group("/:id")
+      {
+        menu:= app.Group("/menu")
+        {
+          menuHdl := handler.NewMPMenuHandler(deps.Log, deps.MenuUsecase)
+          menu.POST("", menuHdl.Create)
+        }
+      }
     }
 	}
 }

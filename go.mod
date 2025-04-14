@@ -67,6 +67,7 @@ require (
 	github.com/redis/go-redis/v9 v9.7.3
 	github.com/seth16888/wxcommon v0.0.1
 	github.com/seth16888/wxtoken v0.1.3
+	github.com/seth16888/wxproxy v0.0.1
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/spf13/viper v1.20.1
 	go.mongodb.org/mongo-driver v1.17.3
@@ -75,3 +76,4 @@ require (
 )
 
 replace github.com/seth16888/wxcommon v0.0.1 => ../wxcommon
+replace github.com/seth16888/wxproxy v0.0.1 => ../wxproxy

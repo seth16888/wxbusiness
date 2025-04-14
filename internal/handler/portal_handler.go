@@ -31,13 +31,13 @@ func NewPortalHandler(log *zap.Logger, validator *validator.Validator,
 func (h *PortalHandler) Verify(ctx *gin.Context) {
 	var params request.VerifyPortalReq
 	if err := ctx.ShouldBindQuery(&params); err != nil {
-		ctx.JSON(400, r.Error[any](400, err.Error()))
+		ctx.JSON(400, r.Error(400, err.Error()))
 		return
 	}
 	// App Id
 	params.AppID = ctx.Param("id")
 	if params.AppID == "" {
-		ctx.JSON(400, r.Error[any](400, "invalid appid"))
+		ctx.JSON(400, r.Error(400, "invalid appid"))
 		return
 	}
 
@@ -45,13 +45,13 @@ func (h *PortalHandler) Verify(ctx *gin.Context) {
 		params.AppID, params.Timestamp, params.Nonce, params.Signature)
 
 	if err := h.validator.Validate(&params); err != nil {
-		ctx.JSON(400, r.Error[any](400, err.Error()))
+		ctx.JSON(400, r.Error(400, err.Error()))
 		return
 	}
 
 	if _, err := h.uc.Verify(ctx, params.AppID, params.Timestamp,
 		params.Nonce, params.Signature, params.EchoStr); err != nil {
-		ctx.JSON(400, r.Error[any](400, "invalid signature"))
+		ctx.JSON(400, r.Error(400, "invalid signature"))
 		return
 	}
 
@@ -61,23 +61,23 @@ func (h *PortalHandler) Verify(ctx *gin.Context) {
 
 // Portal
 func (h *PortalHandler) Portal(ctx *gin.Context) {
-	// mp Id
+	// App Id
 	appId := ctx.Param("id")
 	if len(appId) == 0 {
-		ctx.JSON(400, r.Error[any](400, "invalid mpId"))
+		ctx.JSON(400, r.Error(400, "invalid mpId"))
 		return
 	}
 	// 获取mp token
 	mpAPP, err := h.uc.GetMpApp(ctx, appId)
-  if err != nil {
-    logger.Errorf("get mp token error: %v", err)
-    ctx.JSON(400, r.Error[any](400, "get mp token error"))
-    return
-  }
+	if err != nil {
+		logger.Errorf("get mp token error: %v", err)
+		ctx.JSON(400, r.Error(400, "get mp token error"))
+		return
+	}
 
 	var params request.PortalMessageReq
 	if err := ctx.ShouldBindQuery(&params); err != nil {
-		ctx.JSON(400, r.Error[any](400, err.Error()))
+		ctx.JSON(400, r.Error(400, err.Error()))
 		return
 	}
 
@@ -87,21 +87,21 @@ func (h *PortalHandler) Portal(ctx *gin.Context) {
     // 验证签名
     if !commHelpers.ValidatePortalReq(params.Timestamp, params.Nonce, params.Signature, mpAPP.Token) {
       logger.Errorf("signature error")
-      ctx.JSON(400, r.Error[any](400, "invalid signature"))
+      ctx.JSON(400, r.Error(400, "invalid signature"))
       return
     }
 	} else {
     // 安全模式
     var encryptMsg request.EncryptMessageReq
-    if err:=ctx.ShouldBind(&encryptMsg); err !=nil {
+    if err := ctx.ShouldBind(&encryptMsg); err != nil {
       logger.Errorf("bind encrypt message error: %v", err)
-      ctx.JSON(400, r.Error[any](400, "invalid encrypt message"))
+      ctx.JSON(400, r.Error(400, "invalid encrypt message"))
       return
     }
     // 验证签名
     if !commHelpers.ValidateEncryptSignature(mpAPP.Token, params.Timestamp, params.Nonce, params.MsgSignature, encryptMsg.Encrypt) {
       logger.Errorf("signature error")
-      ctx.JSON(400, r.Error[any](400, "invalid signature"))
+      ctx.JSON(400, r.Error(400, "invalid signature"))
       return
     }
     // 解密消息
@@ -113,14 +113,14 @@ func (h *PortalHandler) Portal(ctx *gin.Context) {
     blockSize := 16
     if len(cipherText)%blockSize != 0 {
       h.log.Error("cipherText length is not a multiple of block size", zap.Int("length", len(cipherText)), zap.Int("blockSize", blockSize))
-      ctx.JSON(400, r.Error[any](400, "invalid cipherText length"))
+      ctx.JSON(400, r.Error(400, "invalid cipherText length"))
       return
     }
 
     rawData, err := commHelpers.AESDecryptData(cipherText, aesKey, iv)
     if err != nil {
       logger.Errorf("decrypt message error: %v", err)
-      ctx.JSON(400, r.Error[any](400, "decrypt message error"))
+      ctx.JSON(400, r.Error(400, "decrypt message error"))
       return
     }
     logger.Debugf("raw data: %s", string(rawData))
@@ -141,7 +141,7 @@ func (h *PortalHandler) Portal(ctx *gin.Context) {
 	err = msgDomain.Unmarshal()
 	if err != nil {
 		logger.Errorf("unmarshal error: %v", err)
-		ctx.JSON(400, r.Error[any](400, "invalid xml"))
+		ctx.JSON(400, r.Error(400, "invalid xml"))
 		return
 	}
 

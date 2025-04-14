@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/seth16888/wxbusiness/internal/biz"
 	"github.com/seth16888/wxbusiness/internal/bootstrap"
@@ -65,12 +66,23 @@ var rootCmd = &cobra.Command{
 		di.Get().TokenClient = tokenClient
 		di.Get().Validator = validator.NewValidator()
 
-		tokenProxy := biz.NewAccessTokenUsecase(tokenClient, di.Get().Log)
+    // gRPC timeout
+    gRPCTimeout := 15 * time.Second
+
+		tokenProxy := biz.NewAccessTokenUsecase(tokenClient, di.Get().Log, gRPCTimeout)
 		platformAppRepo := data.NewPlatformAppRepo(di.Get().DB, di.Get().Log)
 		portalUsecase := biz.NewPortalUsecase(platformAppRepo, tokenProxy, di.Get().Log)
 		di.Get().PortalUsecase = portalUsecase
 
     di.Get().PlatformAppUsecase = biz.NewPlatformAppUsecase(platformAppRepo, di.Get().Log)
+
+    apiProxyClient,err:= bootstrap.InitAPIProxyClient(di.Get().Conf.ProxyServer.Addr)
+    if err != nil {
+      return err
+    }
+    apiProxy := biz.NewAPIProxyUsecase(apiProxyClient, di.Get().Log, gRPCTimeout)
+    menuUsecase := biz.NewMPMenuUsecase(platformAppRepo, tokenProxy, apiProxy)
+    di.Get().MenuUsecase = menuUsecase
 
 		return bootstrap.StartApp(di.Get())
 	},
