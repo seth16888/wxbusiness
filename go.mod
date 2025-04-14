@@ -42,7 +42,7 @@ require (
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
-	go.uber.org/multierr v1.10.0 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.15.0 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/image v0.23.0 // indirect
@@ -65,9 +65,10 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/mojocn/base64Captcha v1.3.8
 	github.com/redis/go-redis/v9 v9.7.3
+	github.com/seth16888/coauth v0.0.0-20250414090832-49a2c726c6c3
 	github.com/seth16888/wxcommon v0.0.1
-	github.com/seth16888/wxtoken v0.1.3
 	github.com/seth16888/wxproxy v0.0.1
+	github.com/seth16888/wxtoken v0.1.3
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/spf13/viper v1.20.1
 	go.mongodb.org/mongo-driver v1.17.3
@@ -76,4 +77,5 @@ require (
 )
 
 replace github.com/seth16888/wxcommon v0.0.1 => ../wxcommon
+
 replace github.com/seth16888/wxproxy v0.0.1 => ../wxproxy

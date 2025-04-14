@@ -1,6 +1,7 @@
 package di
 
 import (
+	au "github.com/seth16888/coauth/api/v1"
 	"github.com/seth16888/wxbusiness/internal/biz"
 	"github.com/seth16888/wxbusiness/internal/config"
 	"github.com/seth16888/wxbusiness/internal/data"
@@ -8,7 +9,7 @@ import (
 	"github.com/seth16888/wxbusiness/internal/server"
 	"github.com/seth16888/wxbusiness/pkg/jwt"
 	"github.com/seth16888/wxbusiness/pkg/validator"
-	v1 "github.com/seth16888/wxtoken/api/v1"
+	ak "github.com/seth16888/wxtoken/api/v1"
 	"go.uber.org/zap"
 )
 
@@ -32,9 +33,10 @@ type Container struct {
 	JWT                *jwt.JWTService
 	Server             *server.Server
 	HealthHandler      *handler.HealthHandler
-	TokenClient        v1.TokenClient
+	TokenClient        ak.TokenClient
 	Validator          *validator.Validator
 	PortalUsecase      *biz.PortalUsecase
 	PlatformAppUsecase *biz.PlatformAppUsecase
 	MenuUsecase        *biz.MPMenuUsecase
+	CoAuthClient       au.CoauthClient
 }

@@ -34,6 +34,13 @@ func registerRoutes(r *gin.Engine, deps *di.Container) {
 
 	v1 := r.Group("/v1")
 	{
+    auth:= v1.Group("/auth")
+    {
+      authCtr := handler.NewAuthHandler(deps.Log, deps.Validator, deps.CoAuthClient)
+      auth.GET("/captcha", authCtr.GetCaptcha)
+      auth.POST("/login", authCtr.Login)
+    }
+
     mp := v1.Group("/mp")
     {
       portalCtr:= handler.NewPortalHandler(deps.Log, deps.Validator, deps.PortalUsecase)

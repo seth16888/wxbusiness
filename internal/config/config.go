@@ -9,13 +9,14 @@ import (
 )
 
 type Conf struct {
-	Server      *server.ServerConf
-	Log         *logger.LogConfig
-	Redis       *RedisConfig
-	DB          *database.DatabaseConfig
-	Jwt         *Jwt
-	TokenServer *TokenServer `mapstructure:"token_server"`
-	ProxyServer *ProxyServer `mapstructure:"proxy_server"`
+	Server       *server.ServerConf
+	Log          *logger.LogConfig
+	Redis        *RedisConfig
+	DB           *database.DatabaseConfig
+	Jwt          *Jwt
+	TokenServer  *TokenServer  `mapstructure:"token_server"`
+	ProxyServer  *ProxyServer  `mapstructure:"proxy_server"`
+	CoAuthServer *CoAuthServer `mapstructure:"co_auth_server"`
 }
 
 // TokenServer token server配置
@@ -25,6 +26,11 @@ type TokenServer struct {
 
 // ProxyServer proxy server配置
 type ProxyServer struct {
+	Addr string
+}
+
+// CoAuthServer auth server配置
+type CoAuthServer struct {
 	Addr string
 }
 

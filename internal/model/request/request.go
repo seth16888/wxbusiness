@@ -44,3 +44,10 @@ type EncryptMessageReq struct {
 	ToUserName string `json:"ToUserName" form:"ToUserName" xml:"ToUserName"`
 	Encrypt    string `json:"encrypt" form:"encrypt" xml:"Encrypt"`
 }
+
+type LoginReq struct {
+	Username    string `json:"username" binding:"required"`
+	Password    string `json:"password" binding:"required"`
+	CaptchaKey  string `json:"captchaKey" binding:"required"`
+	CaptchaCode string `json:"captchaCode" binding:"required"`
+}

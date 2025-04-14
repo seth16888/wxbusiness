@@ -31,3 +31,21 @@ Authorization: Bearer {{token}}
   "appSecret": "da5a265561ed02903fdf7bc923026c2c",
   "type": 1
 }
+
+###
+# @name captcha
+GET {{host}}/auth/captcha
+Content-Type: application/json
+
+
+###
+# @name login
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin1",
+  "password": "admin1",
+  "captchaCode": "1234",
+  "captchaKey": "123456123456"
+}

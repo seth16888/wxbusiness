@@ -84,6 +84,12 @@ var rootCmd = &cobra.Command{
     menuUsecase := biz.NewMPMenuUsecase(platformAppRepo, tokenProxy, apiProxy)
     di.Get().MenuUsecase = menuUsecase
 
+    coAuthClient, err := bootstrap.InitAuthClient(di.Get().Conf.CoAuthServer.Addr)
+    if err != nil {
+      return err
+    }
+    di.Get().CoAuthClient = coAuthClient
+
 		return bootstrap.StartApp(di.Get())
 	},
 }
