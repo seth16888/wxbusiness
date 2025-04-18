@@ -49,3 +49,14 @@ func newDB(conf *database.DatabaseConfig, log *zap.Logger) *mongo.Client {
 	log.Info("Connected to MongoDB")
 	return client
 }
+
+// GetSkipNum get skip num
+func GetSkipNum(page, pageSize int64) int64 {
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 10
+	}
+	return (page - 1) * pageSize
+}

@@ -13,12 +13,12 @@ import (
 )
 
 type PortalUsecase struct {
-	repo       PlatformAppRepo
+	repo       AppRepo
 	log        *zap.Logger
 	tokenProxy *AccessTokenUsecase
 }
 
-func NewPortalUsecase(repo PlatformAppRepo,
+func NewPortalUsecase(repo AppRepo,
   tokenProxy *AccessTokenUsecase, logger *zap.Logger) *PortalUsecase {
 	return &PortalUsecase{repo: repo, log: logger, tokenProxy: tokenProxy}
 }
@@ -53,7 +53,7 @@ func (p *PortalUsecase) Verify(ctx context.Context, appId string, timestamp stri
     ctxTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
     defer cancel()
     // 获取一次Access Token
-		_, err := p.tokenProxy.FetchAccessToken(ctxTimeout, appId, appInfo.AppId)
+		_, err := p.tokenProxy.FetchAccessToken(ctxTimeout, appId, appInfo.MpId)
 		if err != nil {
 			logger.Errorf("fetch access token error,%s: %s", err.Error(), appId)
 			return "", err

@@ -27,16 +27,21 @@ func Get() *Container {
 }
 
 type Container struct {
-	Conf               *config.Conf // 配置文件
-	DB                 *data.Data   // 数据库连接
-	Log                *zap.Logger
-	JWT                *jwt.JWTService
-	Server             *server.Server
-	HealthHandler      *handler.HealthHandler
-	TokenClient        ak.TokenClient
-	Validator          *validator.Validator
-	PortalUsecase      *biz.PortalUsecase
-	PlatformAppUsecase *biz.PlatformAppUsecase
-	MenuUsecase        *biz.MPMenuUsecase
-	CoAuthClient       au.CoauthClient
+	Conf             *config.Conf // 配置文件
+	DB               *data.Data   // 数据库连接
+	Log              *zap.Logger
+	JWT              *jwt.JWTService
+	Server           *server.Server
+	HealthHandler    *handler.HealthHandler
+	TokenClient      ak.TokenClient
+	CoAuthClient     au.CoauthClient
+	Validator        *validator.Validator
+	PortalUsecase    *biz.PortalUsecase
+	AppUsecase       *biz.AppUsecase
+	MenuUsecase      *biz.MPMenuUsecase
+	UserUsecase      *biz.UserUsecase
+	MemberTagUsecase *biz.MemberTagUsecase
+	MPMemberUsecase  *biz.MPMemberUsecase
+	MaterialUsecase  *biz.MaterialUsecase
+  MpQRCodeUsecase  *biz.MpQRCodeUsecase
 }

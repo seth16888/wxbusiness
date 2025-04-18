@@ -17,3 +17,10 @@ type LoginResp struct {
 	TokenType    string `json:"tokenType"`
 	ExpiresIn    int64    `json:"expiresIn"`
 }
+
+// Ticket 获取二维码返回结果
+type Ticket struct {
+	Ticket        string `json:"ticket"`
+	URL           string `json:"url"` // URL 解析后的网址，可根据URL自行生成二维码
+	ExpireSeconds int64  `json:"expire_seconds"`
+}

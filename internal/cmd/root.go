@@ -66,29 +66,49 @@ var rootCmd = &cobra.Command{
 		di.Get().TokenClient = tokenClient
 		di.Get().Validator = validator.NewValidator()
 
-    // gRPC timeout
-    gRPCTimeout := 15 * time.Second
+		userAppRepo := data.NewUserAppData(di.Get().DB, di.Get().Log)
+		platformAppRepo := data.NewPlatformAppRepo(di.Get().DB, di.Get().Log) // 先初始化
 
-		tokenProxy := biz.NewAccessTokenUsecase(tokenClient, di.Get().Log, gRPCTimeout)
-		platformAppRepo := data.NewPlatformAppRepo(di.Get().DB, di.Get().Log)
+		// gRPC timeout
+		gRPCTimeout := 15 * time.Second
+
+		tokenProxy := biz.NewAccessTokenUsecase(tokenClient, di.Get().Log, gRPCTimeout, platformAppRepo)
 		portalUsecase := biz.NewPortalUsecase(platformAppRepo, tokenProxy, di.Get().Log)
 		di.Get().PortalUsecase = portalUsecase
 
-    di.Get().PlatformAppUsecase = biz.NewPlatformAppUsecase(platformAppRepo, di.Get().Log)
+		di.Get().AppUsecase = biz.NewAppUsecase(platformAppRepo, di.Get().Log)
 
-    apiProxyClient,err:= bootstrap.InitAPIProxyClient(di.Get().Conf.ProxyServer.Addr)
-    if err != nil {
-      return err
-    }
-    apiProxy := biz.NewAPIProxyUsecase(apiProxyClient, di.Get().Log, gRPCTimeout)
-    menuUsecase := biz.NewMPMenuUsecase(platformAppRepo, tokenProxy, apiProxy)
-    di.Get().MenuUsecase = menuUsecase
+		apiProxyClient, err := bootstrap.InitAPIProxyClient(di.Get().Conf.ProxyServer.Addr)
+		if err != nil {
+			return err
+		}
+		apiProxy := biz.NewAPIProxyUsecase(apiProxyClient, di.Get().Log, gRPCTimeout, tokenProxy)
+		menuUsecase := biz.NewMPMenuUsecase(platformAppRepo, tokenProxy, apiProxy, di.Get().Log)
+		di.Get().MenuUsecase = menuUsecase
 
-    coAuthClient, err := bootstrap.InitAuthClient(di.Get().Conf.CoAuthServer.Addr)
-    if err != nil {
-      return err
-    }
-    di.Get().CoAuthClient = coAuthClient
+		coAuthClient, err := bootstrap.InitAuthClient(di.Get().Conf.CoAuthServer.Addr)
+		if err != nil {
+			return err
+		}
+		di.Get().CoAuthClient = coAuthClient
+
+		userUc := biz.NewUserUsecase(userAppRepo)
+		di.Get().UserUsecase = userUc
+
+		tagRepo := data.NewMemberTagData(di.Get().DB, di.Get().Log)
+		tagUc := biz.NewMemberTagUsecase(tagRepo, di.Get().Log, apiProxy)
+		di.Get().MemberTagUsecase = tagUc
+
+		memberRepo := data.NewMPMemberData(di.Get().DB, di.Get().Log)
+		memberUc := biz.NewMPMemberUsecase(di.Get().Log, memberRepo, apiProxy)
+		di.Get().MPMemberUsecase = memberUc
+
+		materialRepo := data.NewMPMaterialData(di.Get().DB, di.Get().Log)
+		materialUc := biz.NewMaterialUsecase(di.Get().Log, materialRepo)
+		di.Get().MaterialUsecase = materialUc
+
+		qrcodeUc := biz.NewMpQRCodeUsecase(di.Get().Log, platformAppRepo, tokenProxy, apiProxy)
+		di.Get().MpQRCodeUsecase = qrcodeUc
 
 		return bootstrap.StartApp(di.Get())
 	},

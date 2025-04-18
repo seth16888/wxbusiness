@@ -10,7 +10,7 @@ type PlatformApp struct {
 	Token          string             `bson:"token" json:"token"`
 	EncodingAesKey string             `bson:"encoding_aes_key" json:"encoding_aes_key"`
 	EncodingType   int                `bson:"encoding_type" json:"encoding_type"`
-	AppId          string             `bson:"app_id" json:"app_id"` // 公众号appid
+	MpId           string             `bson:"mp_id" json:"mp_id"` // 公众号appid
 	AppSecret      string             `bson:"app_secret" json:"app_secret"`
 	Status         int                `bson:"status" json:"status"`
 	Introduction   string             `bson:"introduction" json:"introduction"`

@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type PlatformAppRepo interface {
+type AppRepo interface {
 	Get(ctx context.Context, id string) (*entities.PlatformApp, error)
 	Create(ctx context.Context, app *entities.PlatformApp) (string, error)
 	// Update(ctx context.Context, app *entities.PlatformApp) error
@@ -21,19 +21,19 @@ type PlatformAppRepo interface {
   GetByMPId(ctx context.Context, appId string) (*entities.PlatformApp, error)
 }
 
-type PlatformAppUsecase struct {
-	repo PlatformAppRepo
+type AppUsecase struct {
+	repo AppRepo
 	log  *zap.Logger
 }
 
-func NewPlatformAppUsecase(repo PlatformAppRepo, logger *zap.Logger) *PlatformAppUsecase {
-	return &PlatformAppUsecase{
+func NewAppUsecase(repo AppRepo, logger *zap.Logger) *AppUsecase {
+	return &AppUsecase{
 		repo: repo,
 		log:  logger,
 	}
 }
 
-func (p *PlatformAppUsecase) Create(ctx context.Context,
+func (p *AppUsecase) Create(ctx context.Context,
 	userId string, req *request.CreateAppReq,
 ) (string, error) {
 	now := time.Now().Unix()
@@ -49,7 +49,7 @@ func (p *PlatformAppUsecase) Create(ctx context.Context,
 		Token:          token,
 		EncodingAesKey: encodingAESKey,
 		EncodingType:   encodingType,
-		AppId:          req.AppId,
+		MpId:          req.AppId,
 		AppSecret:      req.AppSecret,
 		Status:         0,
 		Introduction:   req.Introduction,
@@ -67,4 +67,16 @@ func (p *PlatformAppUsecase) Create(ctx context.Context,
 	}
 
 	return id, nil
+}
+
+// GetById
+func (p *AppUsecase) GetById(ctx context.Context, appId string) (*entities.PlatformApp, error) {
+	entity,err:= p.repo.Get(ctx, appId)
+	if err!= nil {
+		p.log.Error("getAppById", zap.Error(err))
+		return nil, fmt.Errorf("获取数据失败")
+	}
+
+  // TODO: 缓存
+	return entity, nil
 }

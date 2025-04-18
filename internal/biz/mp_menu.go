@@ -5,44 +5,49 @@ import (
 
 	"github.com/seth16888/wxbusiness/internal/model/r"
 	"github.com/seth16888/wxcommon/mp"
+	"go.uber.org/zap"
 )
 
 type MPMenuUsecase struct {
-	repo     PlatformAppRepo
+	repo     AppRepo
 	tokenUc  *AccessTokenUsecase
 	apiProxy *APIProxyUsecase
+  log       *zap.Logger
 }
 
-func NewMPMenuUsecase(repo PlatformAppRepo,
+func NewMPMenuUsecase(repo AppRepo,
 	tokenUc *AccessTokenUsecase,
 	apiProxy *APIProxyUsecase,
+  log       *zap.Logger,
 ) *MPMenuUsecase {
-	return &MPMenuUsecase{repo: repo, tokenUc: tokenUc, apiProxy: apiProxy}
+	return &MPMenuUsecase{repo: repo, tokenUc: tokenUc, apiProxy: apiProxy, log: log}
 }
 
 func (u *MPMenuUsecase) Pull(ctx context.Context, appId string) *r.R {
-	// 获取公众号信息
-	mpInfo, err := u.repo.Get(ctx, appId)
+  app, err := GetAppInfoFromCtx(ctx)
 	if err != nil {
-		return r.Error(400, "app not found")
+		u.log.Error("get app info error", zap.Error(err))
+		return r.Error(400, "get app info error")
 	}
+	mpId := app.MpId
 	// accessToken
-	_, err = u.tokenUc.FetchAccessToken(ctx, appId, mpInfo.AppId)
+	_, err = u.tokenUc.FetchAccessToken(ctx, appId, mpId)
 	if err != nil {
 		return r.Error(403, "fetch access token error")
 	}
 
-	return r.SuccessData(mpInfo)
+	return r.SuccessData(nil)
 }
 
 func (u *MPMenuUsecase) Create(ctx context.Context, pId string, params *mp.CreateMenuReq) *r.R {
-	// 获取公众号信息
-	mpInfo, err := u.repo.Get(ctx, pId)
+  app, err := GetAppInfoFromCtx(ctx)
 	if err != nil {
-		return r.Error(400, "app not found")
+		u.log.Error("get app info error", zap.Error(err))
+		return r.Error(400, "get app info error")
 	}
+	mpId := app.MpId
 	// accessToken
-	akRes, err := u.tokenUc.FetchAccessToken(ctx, pId, mpInfo.AppId)
+	akRes, err := u.tokenUc.FetchAccessToken(ctx, pId, mpId)
 	if err != nil {
 		return r.Error(403, "fetch access token error")
 	}

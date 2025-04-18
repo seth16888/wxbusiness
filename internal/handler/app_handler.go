@@ -9,27 +9,20 @@ import (
 	"go.uber.org/zap"
 )
 
-type PlatformAppHandler struct {
+type AppHandler struct {
 	Base
 	validator *validator.Validator
 	log       *zap.Logger
-	uc        *biz.PlatformAppUsecase
+	uc        *biz.AppUsecase
 }
 
-func NewPlatformAppHandler(
-	log *zap.Logger,
-	validator *validator.Validator,
-	uc *biz.PlatformAppUsecase,
-) *PlatformAppHandler {
-	return &PlatformAppHandler{
-		log:       log,
-		validator: validator,
-		uc:        uc,
-	}
+func NewAppHandler(log *zap.Logger, validator *validator.Validator,
+  uc *biz.AppUsecase) *AppHandler {
+	return &AppHandler{log: log, validator: validator, uc: uc}
 }
 
 // Create
-func (h *PlatformAppHandler) Create(ctx *gin.Context) {
+func (h *AppHandler) Create(ctx *gin.Context) {
 	var req request.CreateAppReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(400, r.Error(400, err.Error()))
@@ -49,6 +42,23 @@ func (h *PlatformAppHandler) Create(ctx *gin.Context) {
 	res, err := h.uc.Create(ctx, userId, &req)
 	if err != nil {
 		ctx.JSON(400, r.Error(400, err.Error()))
+		return
+	}
+
+	ctx.JSON(200, r.SuccessData(res))
+}
+
+// GetById
+func (h *AppHandler) GetById(ctx *gin.Context) {
+	appId := ctx.Param("id")
+	if appId == "" {
+		ctx.JSON(400, r.Error(400, "appId is required"))
+		return
+	}
+
+	res, err := h.uc.GetById(ctx, appId)
+	if err != nil {
+		ctx.JSON(500, r.Error(500, err.Error()))
 		return
 	}
 

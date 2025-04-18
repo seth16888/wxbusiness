@@ -51,3 +51,8 @@ type LoginReq struct {
 	CaptchaKey  string `json:"captchaKey" binding:"required"`
 	CaptchaCode string `json:"captchaCode" binding:"required"`
 }
+
+type PagingQuery struct {
+	PageNo   int64 `json:"page_no" form:"page_no"`
+	PageSize int64 `json:"page_size" form:"page_size"`
+}

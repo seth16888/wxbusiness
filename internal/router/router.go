@@ -21,7 +21,7 @@ func InitRouter(deps *di.Container) http.Handler {
 	r.Use(gin.Recovery())
 	r.Use(cors.Default())
 	r.Use(requestid.New())
-  r.Use(middleware.NewJwtTokenMW(deps.JWT))
+	r.Use(middleware.NewJwtTokenMW(deps.JWT))
 
 	registerRoutes(r, deps)
 
@@ -34,37 +34,78 @@ func registerRoutes(r *gin.Engine, deps *di.Container) {
 
 	v1 := r.Group("/v1")
 	{
-    auth:= v1.Group("/auth")
-    {
-      authCtr := handler.NewAuthHandler(deps.Log, deps.Validator, deps.CoAuthClient)
-      auth.GET("/captcha", authCtr.GetCaptcha)
-      auth.POST("/login", authCtr.Login)
-    }
+		userCtr := handler.NewUserHandler(deps.Log, deps.Validator, deps.UserUsecase)
+		v1.GET("/users/:userId/apps", userCtr.ListMPApps)
+		// v1/auth
+		auth := v1.Group("/auth")
+		{
+			authCtr := handler.NewAuthHandler(deps.Log, deps.Validator, deps.CoAuthClient)
+			auth.GET("/captcha", authCtr.GetCaptcha)
+			auth.POST("/login", authCtr.Login)
+		}
+		// v1/portal/:id
+		portGrp := v1.Group("/portal")
+		{
+			portalCtr := handler.NewPortalHandler(deps.Log, deps.Validator, deps.PortalUsecase)
+			portGrp.GET("/:id", portalCtr.Verify)
+			portGrp.POST("/:id", portalCtr.Portal)
+		}
 
-    mp := v1.Group("/mp")
-    {
-      portalCtr:= handler.NewPortalHandler(deps.Log, deps.Validator, deps.PortalUsecase)
-      mp.GET("/:id/portal", portalCtr.Verify)
-      mp.POST("/:id/portal", portalCtr.Portal)
-    }
+		// v1/apps
+		appGrp := v1.Group("/apps")
+		{
+			appCtr := handler.NewAppHandler(deps.Log, deps.Validator, deps.AppUsecase)
+			appGrp.POST("", appCtr.Create)
 
-    platform := v1.Group("/platform")
-    {
-      platformAppHdl := handler.NewPlatformAppHandler(deps.Log,
-        deps.Validator, deps.PlatformAppUsecase)
-      platform.POST("/apps", platformAppHdl.Create)
-    }
-
-    appGrp := v1.Group("/app")
-    {
-      app:= appGrp.Group("/:id")
-      {
-        menu:= app.Group("/menu")
+			// v1/apps/:id
+			appGrp := appGrp.Group("/:id", middleware.NewAppMiddleware(deps.AppUsecase))
+			{
+				appGrp.GET("", appCtr.GetById)
+				// v1/apps/:id/menu
+				menuGrp := appGrp.Group("/menu")
+				{
+					menuCtr := handler.NewMPMenuHandler(deps.Log, deps.MenuUsecase)
+					menuGrp.POST("", menuCtr.Create)
+				}
+				// v1/apps/:id/tags
+				tagGrp := appGrp.Group("/tags")
+				{
+					tagCtr := handler.NewMemberTagHandler(deps.Log, deps.MemberTagUsecase)
+					tagGrp.GET("", tagCtr.Query)
+					tagGrp.POST("", tagCtr.Create)
+					tagGrp.PUT("/:tagId", tagCtr.Update)
+					tagGrp.DELETE("/:tagId", tagCtr.Delete)
+				}
+				// v1/apps/:id/members
+				memberGrp := appGrp.Group("/members")
+				{
+					memberCtr := handler.NewMPMemberHandler(deps.Log, deps.MPMemberUsecase)
+					memberGrp.GET("", memberCtr.Query)
+					memberGrp.GET("/info", memberCtr.GetMemberInfo)
+					memberGrp.GET("/tags", memberCtr.GetMemberTags)
+					memberGrp.POST("/info/remark", memberCtr.UpdateRemark)
+					memberGrp.POST("/blacklist/list", memberCtr.GetBlackList)
+					memberGrp.POST("/blacklist/block", memberCtr.BatchBlock)
+					memberGrp.POST("/blacklist/unblock", memberCtr.BatchUnblock)
+					memberGrp.POST("/pull", memberCtr.Pull)
+				}
+				// v1/apps/:id/materials
+				materialGrp := appGrp.Group("/materials")
+				{
+					maCtr := handler.NewMaterialHandler(deps.Log, deps.MaterialUsecase)
+					materialGrp.POST("/temporary", maCtr.UploadTemporaryMedia)
+					materialGrp.POST("/news_image", maCtr.UploadNewsImage)
+					materialGrp.POST("/limit", maCtr.UploadMedia)
+					materialGrp.POST("/list", maCtr.GetMaterialList)
+				}
+        qrcodeGrp := appGrp.Group("/qrcode")
         {
-          menuHdl := handler.NewMPMenuHandler(deps.Log, deps.MenuUsecase)
-          menu.POST("", menuHdl.Create)
+          qrcodeCtr := handler.NewQRCodeHandler(deps.Log, deps.MpQRCodeUsecase, deps.Validator)
+          qrcodeGrp.POST("/temporary", qrcodeCtr.CreateTemporary)
+          qrcodeGrp.POST("/limit", qrcodeCtr.CreateLimit)
+          qrcodeGrp.GET("/url", qrcodeCtr.GetURL)
         }
-      }
-    }
+			}
+		}
 	}
 }

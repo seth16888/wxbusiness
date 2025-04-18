@@ -20,7 +20,7 @@ type PlatformAppData struct {
 
 // GetByMPId retrieves a Platform App by its MPId
 func (p *PlatformAppData) GetByMPId(ctx context.Context, mpId string) (*entities.PlatformApp, error) {
-	filter := bson.M{"app_id": mpId}
+	filter := bson.M{"mp_id": mpId}
 	app := &entities.PlatformApp{}
 	if err := p.col.FindOne(ctx, filter).Decode(app); err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func (p *PlatformAppData) Create(ctx context.Context, app *entities.PlatformApp)
 	return "", fmt.Errorf("failed to get inserted id")
 }
 
-func NewPlatformAppRepo(data *Data, logger *zap.Logger) biz.PlatformAppRepo {
+func NewPlatformAppRepo(data *Data, logger *zap.Logger) biz.AppRepo {
 	collection := data.db.Collection("platform_apps")
 	return &PlatformAppData{
 		col:    collection,

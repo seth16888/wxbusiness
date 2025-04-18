@@ -14,21 +14,32 @@ type APIProxyUsecase struct {
 	cli     ap.MpproxyClient
 	log     *zap.Logger
 	timeout time.Duration
+  tokenCli *AccessTokenUsecase
 }
 
 func NewAPIProxyUsecase(cli ap.MpproxyClient, log *zap.Logger,
-  timeout time.Duration) *APIProxyUsecase {
+  timeout time.Duration, tokenUc  *AccessTokenUsecase) *APIProxyUsecase {
 	return &APIProxyUsecase{
 		cli:     cli,
 		log:     log,
     timeout: timeout,
+    tokenCli: tokenUc,
 	}
+}
+
+func (a *APIProxyUsecase) GetAccessToken(ctx context.Context,
+	appId, mpId string) (string, error) {
+	// 获取access token
+	token, err := a.tokenCli.FetchAccessToken(ctx, appId, mpId)
+	if err != nil {
+		return "", err
+	}
+	return token.AccessToken, nil
 }
 
 // CreateMenu 创建菜单
 func (a *APIProxyUsecase) CreateMenu(ctx context.Context,
-	token string, params *mp.CreateMenuReq,
-) error {
+	token string, params *mp.CreateMenuReq) error {
 	// 转换请求参数
 	if params == nil {
 		return fmt.Errorf("params cannot be nil")
