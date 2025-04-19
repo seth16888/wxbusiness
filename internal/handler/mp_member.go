@@ -183,9 +183,16 @@ func (h *MPMemberHandler) BatchUnblock(ctx *gin.Context) {
 // Pull 同步微信粉丝
 func (h *MPMemberHandler) Pull(ctx *gin.Context) {
 	// 路径参数
-	_, err := h.GetPID(ctx)
+	appId, err := h.GetPID(ctx)
 	if err != nil {
 		ctx.JSON(400, r.Error(400, err.Error()))
+		return
+	}
+
+	c := ctx
+	if err := h.uc.Pull(c, appId); err != nil {
+		h.log.Error("pull member error", zap.Error(err))
+		ctx.JSON(500, r.Error(500, "同步微信粉丝失败"))
 		return
 	}
 

@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// MemberTagHandler defines the member tag handler.
 type MemberTagHandler struct {
   Base
 	log *zap.Logger
@@ -107,4 +108,23 @@ func (h *MemberTagHandler) Query(ctx *gin.Context) {
   }
 
   ctx.JSON(200, r.SuccessData(tags))
+}
+
+// Pull 拉取公众号标签
+func (h *MemberTagHandler) Pull(ctx *gin.Context) {
+  // 路径参数
+  appId,err := h.GetPID(ctx)
+  if err != nil {
+    ctx.JSON(400, r.Error(400, "参数错误"))
+    return
+  }
+
+  c:= ctx
+  if err := h.uc.Pull(c, appId); err!= nil {
+    h.log.Error("pull tags error", zap.Error(err))
+    ctx.JSON(500, r.Error(500, "拉取标签失败"))
+    return
+  }
+
+  ctx.JSON(200, r.Success())
 }

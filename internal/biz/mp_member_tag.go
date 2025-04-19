@@ -17,6 +17,7 @@ type MemberTagRepo interface {
 	GetByTagId(ctx context.Context, appId string, tagId int64) (*entities.MemberTag, error)
 	Update(ctx context.Context, id primitive.ObjectID, tag *entities.MemberTag) error
 	Query(ctx context.Context, appId string) ([]*entities.MemberTag, error)
+  Save(ctx context.Context, tag *entities.MemberTag) error // 存在则更新，不存在则创建
 }
 
 // MemberTagUsecase 会员标签
@@ -26,6 +27,45 @@ type MemberTagUsecase struct {
 	apiProxy *APIProxyUsecase
 }
 
+func (u *MemberTagUsecase) Pull(ctx context.Context, appId string) error {
+	mpIdVar := ctx.Value("MP_ID")
+	if mpIdVar == nil {
+		u.log.Error("get mp id error")
+		return fmt.Errorf("get mp id error")
+	}
+	mpId := mpIdVar.(string)
+
+  token, err := u.apiProxy.GetAccessToken(ctx, appId, mpId)
+	if err != nil {
+		u.log.Error("get access token error", zap.Error(err))
+		return fmt.Errorf("get access token error")
+	}
+
+  params := v1.AccessTokenParam {
+    AccessToken: token,
+  }
+  reply, err := u.apiProxy.cli.GetTagList(ctx, &params)
+	if err != nil {
+		u.log.Error("get tag list error", zap.Error(err))
+		return fmt.Errorf("get tag list error")
+	}
+
+  now:= time.Now().Unix()
+  for _, tag := range reply.Tags {
+    u.repo.Save(ctx, &entities.MemberTag{
+      AppId:     appId,
+      MpId:      mpId,
+      Name:      tag.Name,
+      TagId:     tag.Id,
+      Count:     tag.Count,
+      CreatedAt: now,
+      UpdatedAt: now,
+    })
+  }
+
+  return nil
+}
+
 func NewMemberTagUsecase(repo MemberTagRepo, log *zap.Logger,
 	apiProxy *APIProxyUsecase,
 ) *MemberTagUsecase {
@@ -33,16 +73,15 @@ func NewMemberTagUsecase(repo MemberTagRepo, log *zap.Logger,
 }
 
 func (u *MemberTagUsecase) Create(ctx context.Context, appId, tagName string) error {
-	app, err := GetAppInfoFromCtx(ctx)
-	if err != nil {
-		u.log.Error("get app info error", zap.Error(err))
-		return fmt.Errorf("get app info error")
+	mpIdVar := ctx.Value("MP_ID")
+	if mpIdVar == nil {
+		u.log.Error("get mp id error")
+		return fmt.Errorf("get mp id error")
 	}
-	// appId := app.ID.Hex()
-	mpId := app.MpId
+	mpId := mpIdVar.(string)
 
 	token, err := u.apiProxy.GetAccessToken(ctx, appId, mpId)
-  if err != nil {
+	if err != nil {
 		u.log.Error("get access token error", zap.Error(err))
 		return fmt.Errorf("get access token error")
 	}
@@ -89,26 +128,26 @@ func (u *MemberTagUsecase) Query(ctx context.Context, appId string) ([]*entities
 }
 
 // Update
-func (u *MemberTagUsecase) Update(ctx context.Context, appId,tagName string  ,tagId int64 ) error {
+func (u *MemberTagUsecase) Update(ctx context.Context, appId, tagName string, tagId int64) error {
 	mpIdVar := ctx.Value("MP_ID")
-  if mpIdVar == nil {
+	if mpIdVar == nil {
 		u.log.Error("get mp id error")
 		return fmt.Errorf("get mp id error")
 	}
-  mpId := mpIdVar.(string)
+	mpId := mpIdVar.(string)
 	token, err := u.apiProxy.GetAccessToken(ctx, appId, mpId)
-  if err != nil {
+	if err != nil {
 		u.log.Error("get access token error", zap.Error(err))
 		return fmt.Errorf("get access token error")
 	}
 
-  params := v1.UpdateTagRequest{
-		Id:      tagId,
-		Name:       tagName,
+	params := v1.UpdateTagRequest{
+		Id:          tagId,
+		Name:        tagName,
 		AccessToken: token,
 	}
-  wxErr, err := u.apiProxy.cli.UpdateTag(ctx, &params)
-  if err != nil || wxErr.Errcode != 0 {
+	wxErr, err := u.apiProxy.cli.UpdateTag(ctx, &params)
+	if err != nil || wxErr.Errcode != 0 {
 		u.log.Error("update tag error", zap.Error(err), zap.Any("wxErr", wxErr))
 		return fmt.Errorf("update tag error")
 	}
@@ -133,23 +172,23 @@ func (u *MemberTagUsecase) Update(ctx context.Context, appId,tagName string  ,ta
 // Delete
 func (u *MemberTagUsecase) Delete(ctx context.Context, appId string, tagId int64) error {
 	mpIdVar := ctx.Value("MP_ID")
-  if mpIdVar == nil {
+	if mpIdVar == nil {
 		u.log.Error("get mp id error")
 		return fmt.Errorf("get mp id error")
 	}
-  mpId := mpIdVar.(string)
+	mpId := mpIdVar.(string)
 	token, err := u.apiProxy.GetAccessToken(ctx, appId, mpId)
-  if err != nil {
+	if err != nil {
 		u.log.Error("get access token error", zap.Error(err))
 		return fmt.Errorf("get access token error")
 	}
 
-  params := v1.DeleteTagRequest{
-		Id:      tagId,
+	params := v1.DeleteTagRequest{
+		Id:          tagId,
 		AccessToken: token,
 	}
-  wxErr, err := u.apiProxy.cli.DeleteTag(ctx, &params)
-  if err != nil || wxErr.Errcode != 0 {
+	wxErr, err := u.apiProxy.cli.DeleteTag(ctx, &params)
+	if err != nil || wxErr.Errcode != 0 {
 		u.log.Error("delete tag error", zap.Error(err), zap.Any("wxErr", wxErr))
 		return fmt.Errorf("delete tag error")
 	}

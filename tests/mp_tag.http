@@ -13,3 +13,9 @@ Authorization: Bearer {{token}}
 # @name QueryTag
 GET {{host}}/apps/{{pid}}/tags
 Authorization: Bearer {{token}}
+
+###
+# @name PullTags
+POST {{host}}/apps/{{pid}}/tags/pull
+Content-Type: application/json
+Authorization: Bearer {{token}}

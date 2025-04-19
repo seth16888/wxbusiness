@@ -1,6 +1,7 @@
 package biz
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 
@@ -9,7 +10,6 @@ import (
 	v1 "github.com/seth16888/wxproxy/api/v1"
 	"go.uber.org/zap"
 
-	"github.com/gin-gonic/gin"
 	"github.com/seth16888/wxbusiness/internal/model/request"
 	"github.com/seth16888/wxbusiness/internal/model/response"
 )
@@ -22,7 +22,7 @@ type MpQRCodeUsecase struct {
 }
 
 // GetURL 获取二维码URL
-func (m *MpQRCodeUsecase) GetURL(c *gin.Context, ticket string) string {
+func (m *MpQRCodeUsecase) GetURL(c context.Context, ticket string) string {
 	encodedTicket := url.QueryEscape(ticket)
 
 	url := fmt.Sprintf("https://%s%s?ticket=%s",
@@ -36,7 +36,7 @@ func (m *MpQRCodeUsecase) GetURL(c *gin.Context, ticket string) string {
 
 // CreateLimit 永久二维码，是无过期时间的，但数量较少（目前为最多10万个）。
 // 永久二维码主要用于适用于账号绑定、用户来源统计等场景。
-func (m *MpQRCodeUsecase) CreateLimit(c *gin.Context, appId string,
+func (m *MpQRCodeUsecase) CreateLimit(c context.Context, appId string,
 	req *request.CreateQRCodeReq,
 ) (*response.Ticket, error) {
   app, err := GetAppInfoFromCtx(c)
@@ -75,7 +75,7 @@ func (m *MpQRCodeUsecase) CreateLimit(c *gin.Context, appId string,
 // CreateTemporary 临时二维码，
 // 是有过期时间的，最长可以设置为在二维码生成后的30天（即2592000秒）后过期，
 // 但能够生成较多数量。临时二维码主要用于账号绑定等不要求二维码永久保存的业务场景。
-func (m *MpQRCodeUsecase) CreateTemporary(c *gin.Context, appId string,
+func (m *MpQRCodeUsecase) CreateTemporary(c context.Context, appId string,
 	req *request.CreateQRCodeReq,
 ) (*response.Ticket, error) {
   app, err := GetAppInfoFromCtx(c)

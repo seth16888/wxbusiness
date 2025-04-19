@@ -75,6 +75,7 @@ func registerRoutes(r *gin.Engine, deps *di.Container) {
 					tagGrp.POST("", tagCtr.Create)
 					tagGrp.PUT("/:tagId", tagCtr.Update)
 					tagGrp.DELETE("/:tagId", tagCtr.Delete)
+					tagGrp.POST("/pull", tagCtr.Pull)
 				}
 				// v1/apps/:id/members
 				memberGrp := appGrp.Group("/members")
