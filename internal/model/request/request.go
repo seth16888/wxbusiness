@@ -56,3 +56,8 @@ type PagingQuery struct {
 	PageNo   int64 `json:"page_no" form:"page_no"`
 	PageSize int64 `json:"page_size" form:"page_size"`
 }
+
+type MPMemberQuery struct {
+	PagingQuery
+	TagId int64 `json:"tag_id" form:"tag_id"`
+}

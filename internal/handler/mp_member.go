@@ -4,17 +4,22 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/seth16888/wxbusiness/internal/biz"
 	"github.com/seth16888/wxbusiness/internal/model/r"
+	"github.com/seth16888/wxbusiness/internal/model/request"
+	"github.com/seth16888/wxbusiness/pkg/validator"
 	"go.uber.org/zap"
 )
 
 type MPMemberHandler struct {
 	Base
-	uc  *biz.MPMemberUsecase
-	log *zap.Logger
+	uc        *biz.MPMemberUsecase
+	log       *zap.Logger
+	validator *validator.Validator
 }
 
-func NewMPMemberHandler(log *zap.Logger, uc *biz.MPMemberUsecase) *MPMemberHandler {
-	return &MPMemberHandler{uc: uc, log: log}
+func NewMPMemberHandler(log *zap.Logger, uc *biz.MPMemberUsecase,
+	validator *validator.Validator,
+) *MPMemberHandler {
+	return &MPMemberHandler{uc: uc, log: log, validator: validator}
 }
 
 // Query
@@ -26,15 +31,21 @@ func (h *MPMemberHandler) Query(ctx *gin.Context) {
 		return
 	}
 
-	c := ctx
-	tags, err := h.uc.Query(c, appId)
-	if err != nil {
-		h.log.Error("query tag error", zap.Error(err))
-		ctx.JSON(500, r.Error(500, "查询标签失败"))
+	var params request.MPMemberQuery
+	if err := ctx.ShouldBindQuery(&params); err != nil {
+		ctx.JSON(400, r.Error(400, err.Error()))
 		return
 	}
 
-	ctx.JSON(200, r.SuccessData(tags))
+	c := ctx
+	members, err := h.uc.Query(c, appId, &params)
+	if err != nil {
+		h.log.Error("query tag error", zap.Error(err))
+		ctx.JSON(500, r.Error(500, "查询粉丝列表失败"))
+		return
+	}
+
+	ctx.JSON(200, r.SuccessData(members))
 }
 
 // GetMemberInfo
@@ -193,6 +204,62 @@ func (h *MPMemberHandler) Pull(ctx *gin.Context) {
 	if err := h.uc.Pull(c, appId); err != nil {
 		h.log.Error("pull member error", zap.Error(err))
 		ctx.JSON(500, r.Error(500, "同步微信粉丝失败"))
+		return
+	}
+
+	ctx.JSON(200, r.Success())
+}
+
+// BatchTagging 批量为粉丝打标签
+func (h *MPMemberHandler) BatchTagging(ctx *gin.Context) {
+	// 路径参数
+	appId, err := h.GetPID(ctx)
+	if err != nil {
+		ctx.JSON(400, r.Error(400, err.Error()))
+		return
+	}
+	type req struct {
+		OpenIds []string `json:"openids" binding:"required" msg:"openids不能为空"`
+		TagId   int64    `json:"tagid" binding:"required" msg:"tagid不能为空"`
+	}
+	var params req
+	if err := ctx.ShouldBindJSON(&params); err != nil {
+		ctx.JSON(400, r.Error(400, err.Error()))
+		return
+	}
+
+	c := ctx
+	if err := h.uc.BatchTagging(c, appId, params.OpenIds, params.TagId); err != nil {
+		h.log.Error("batch tagging error", zap.Error(err))
+		ctx.JSON(500, r.Error(500, "批量为粉丝打标签失败"))
+		return
+	}
+
+	ctx.JSON(200, r.Success())
+}
+
+// BatchUnTagging 批量为粉丝取消标签
+func (h *MPMemberHandler) BatchUnTagging(ctx *gin.Context) {
+  	// 路径参数
+	appId, err := h.GetPID(ctx)
+	if err != nil {
+		ctx.JSON(400, r.Error(400, err.Error()))
+		return
+	}
+	type req struct {
+		OpenIds []string `json:"openids" binding:"required" msg:"openids不能为空"`
+		TagId   int64    `json:"tagid" binding:"required" msg:"tagid不能为空"`
+	}
+	var params req
+	if err := ctx.ShouldBindJSON(&params); err != nil {
+		ctx.JSON(400, r.Error(400, err.Error()))
+		return
+	}
+
+	c := ctx
+	if err := h.uc.BatchUnTagging(c, appId, params.OpenIds, params.TagId); err != nil {
+		h.log.Error("batch tagging error", zap.Error(err))
+		ctx.JSON(500, r.Error(500, "批量为粉丝打标签失败"))
 		return
 	}
 

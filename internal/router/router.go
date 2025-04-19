@@ -80,10 +80,12 @@ func registerRoutes(r *gin.Engine, deps *di.Container) {
 				// v1/apps/:id/members
 				memberGrp := appGrp.Group("/members")
 				{
-					memberCtr := handler.NewMPMemberHandler(deps.Log, deps.MPMemberUsecase)
+					memberCtr := handler.NewMPMemberHandler(deps.Log, deps.MPMemberUsecase, deps.Validator)
 					memberGrp.GET("", memberCtr.Query)
 					memberGrp.GET("/info", memberCtr.GetMemberInfo)
 					memberGrp.GET("/tags", memberCtr.GetMemberTags)
+          memberGrp.POST("/tags", memberCtr.BatchTagging)
+          memberGrp.DELETE("/tags", memberCtr.BatchUnTagging)
 					memberGrp.POST("/info/remark", memberCtr.UpdateRemark)
 					memberGrp.POST("/blacklist/list", memberCtr.GetBlackList)
 					memberGrp.POST("/blacklist/block", memberCtr.BatchBlock)

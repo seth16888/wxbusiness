@@ -6,8 +6,11 @@ import (
 
 	"github.com/seth16888/wxbusiness/internal/biz"
 	"github.com/seth16888/wxbusiness/internal/data/entities"
+	"github.com/seth16888/wxbusiness/internal/model"
+	"github.com/seth16888/wxbusiness/internal/model/request"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 )
 
@@ -17,10 +20,52 @@ type MPMemberData struct {
 	log  *zap.Logger
 }
 
+// BatchTagging implements biz.MPMemberRepo.
+func (m *MPMemberData) BatchTagging(c context.Context, appId string, ids []string, tagId int64) error {
+	filter := bson.M{"app_id": appId, "openid": bson.M{"$in": ids}}
+	update := bson.M{"$addToSet": bson.M{"tags": bson.M{"tag_id": tagId}}}
+
+	_, err := m.col.UpdateMany(c, filter, update)
+	if err != nil {
+		return err
+	}
+	// Tag 粉丝数量+1
+	col := m.data.db.Collection("member_tags")
+	tagFilter := bson.M{"app_id": appId, "tag_id": tagId}
+	tagUpdate := bson.M{"$inc": bson.M{"count": 1}}
+	_, err = col.UpdateOne(c, tagFilter, tagUpdate)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// BatchUnTagging implements biz.MPMemberRepo.
+func (m *MPMemberData) BatchUnTagging(c context.Context, appId string, ids []string, tagId int64) error {
+	filter := bson.M{"app_id": appId, "openid": bson.M{"$in": ids}}
+	update := bson.M{"$pull": bson.M{"tags": bson.M{"tag_id": tagId}}}
+
+	_, err := m.col.UpdateMany(c, filter, update)
+	if err != nil {
+		return err
+	}
+
+	// Tag 粉丝数量-1
+	col := m.data.db.Collection("member_tags")
+	tagFilter := bson.M{"app_id": appId, "tag_id": tagId}
+	tagUpdate := bson.M{"$inc": bson.M{"count": -1}}
+	_, err = col.UpdateOne(c, tagFilter, tagUpdate)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Save implements biz.MPMemberRepo.
 func (m *MPMemberData) Save(c context.Context, members []*entities.MPMember) error {
 	// 查询: app_id, openid
-  now:= time.Now().Unix()
+	now := time.Now().Unix()
 	for _, member := range members {
 		filter := bson.M{"app_id": member.AppId, "openid": member.OpenId}
 		update := bson.M{"$set": bson.M{
@@ -57,20 +102,32 @@ func (m *MPMemberData) Save(c context.Context, members []*entities.MPMember) err
 			member.CreatedAt = now
 			member.UpdatedAt = now
 			_, err := m.col.InsertOne(c, member)
-			if err!= nil {
+			if err != nil {
 				return err
 			}
 		}
 	}
-  return nil
+	return nil
 }
 
 // FindByAppId implements biz.MPMemberRepo.
-func (m *MPMemberData) FindByAppId(c context.Context, appId string) ([]*entities.MPMember, error) {
-	filter := bson.M{"app_id": appId}
-	cursor, err := m.col.Find(c, filter)
+func (m *MPMemberData) Find(c context.Context, appId string,
+	params *request.MPMemberQuery,
+) (*model.PageResult[*entities.MPMember], error) {
+	filter := bson.M{"app_id": appId, "blocked": false} // 过滤掉被封禁的用户
+	if params.TagId > 0 {
+		filter["tags.tag_id"] = params.TagId
+	}
+	// 分页
+	skip := GetSkipNum(params.PageNo, params.PageSize)
+	limit := params.PageSize
+	ops := &options.FindOptions{
+		Skip:  &skip,
+		Limit: &limit,
+	}
+	cursor, err := m.col.Find(c, filter, ops)
 	if err != nil {
-		m.log.Error("find member by app id error", zap.Error(err))
+		m.log.Error("find member error", zap.Error(err))
 		return nil, err
 	}
 	var members []*entities.MPMember
@@ -78,8 +135,24 @@ func (m *MPMemberData) FindByAppId(c context.Context, appId string) ([]*entities
 		m.log.Error("decode member error", zap.Error(err))
 		return nil, err
 	}
+	// 统计总数
+	countOps := &options.CountOptions{
+		Skip:  &skip,
+		Limit: &limit,
+	}
+	total, err := m.col.CountDocuments(c, filter, countOps)
+	if err != nil {
+		m.log.Error("count member error", zap.Error(err))
+		return nil, err
+	}
 
-	return members, nil
+	pagingData := model.NewPageResult[*entities.MPMember]()
+	if total > 0 && len(members) > 0 {
+		pagingData.Total = total
+		pagingData.List = members
+	}
+
+	return pagingData, nil
 }
 
 // FindById implements biz.MPMemberRepo.

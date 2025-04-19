@@ -100,7 +100,8 @@ var rootCmd = &cobra.Command{
 		di.Get().MemberTagUsecase = tagUc
 
 		memberRepo := data.NewMPMemberData(di.Get().DB, di.Get().Log)
-		memberUc := biz.NewMPMemberUsecase(di.Get().Log, memberRepo, apiProxy)
+    blockRepo := data.NewMPBlackListData(di.Get().DB, di.Get().Log)
+		memberUc := biz.NewMPMemberUsecase(di.Get().Log, memberRepo, apiProxy, blockRepo)
 		di.Get().MPMemberUsecase = memberUc
 
 		materialRepo := data.NewMPMaterialData(di.Get().DB, di.Get().Log)

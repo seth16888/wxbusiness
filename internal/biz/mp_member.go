@@ -6,15 +6,20 @@ import (
 	"time"
 
 	"github.com/seth16888/wxbusiness/internal/data/entities"
+	"github.com/seth16888/wxbusiness/internal/model"
+	"github.com/seth16888/wxbusiness/internal/model/request"
 	v1 "github.com/seth16888/wxproxy/api/v1"
 	"go.uber.org/zap"
 )
 
 type MPMemberRepo interface {
-	FindByAppId(c context.Context, appId string) ([]*entities.MPMember, error)
+	Find(c context.Context, appId string,
+		params *request.MPMemberQuery) (*model.PageResult[*entities.MPMember], error)
 	FindById(c context.Context, id string) (*entities.MPMember, error)
 	UpdateRemark(c context.Context, id, remark string) error
-  Save(c context.Context, members []*entities.MPMember) error // 存在则更新，不存在则创建
+	Save(c context.Context, members []*entities.MPMember) error // 存在则更新，不存在则创建
+  BatchTagging(c context.Context, appId string, ids []string, tagId int64) error
+  BatchUnTagging(c context.Context, appId string, ids []string, tagId int64) error
 }
 
 type MPBlackListRepo interface {
@@ -30,8 +35,104 @@ type MPMemberUsecase struct {
 	apiProxy      *APIProxyUsecase
 }
 
+func (m *MPMemberUsecase) BatchUnTagging(c context.Context, appId string, ids []string, id int64) error {
+	mpIdVar := c.Value("MP_ID")
+	if mpIdVar == nil {
+		m.log.Error("get mp id error")
+		return fmt.Errorf("get mp id error")
+	}
+	mpId := mpIdVar.(string)
+
+	token, err := m.apiProxy.GetAccessToken(c, appId, mpId)
+	if err != nil {
+		m.log.Error("get access token error", zap.Error(err))
+		return fmt.Errorf("get access token error")
+	}
+
+	params := v1.BatchUnTaggingMembersRequest{
+		AccessToken: token,
+		Id:          id,
+		OpenidList:  ids,
+	}
+	wxErr, err := m.apiProxy.cli.BatchUnTaggingMembers(c, &params)
+  if err != nil {
+		return err
+	}
+	if wxErr != nil && wxErr.Errcode != 0 {
+		m.log.Error("api error", zap.Any("return", wxErr))
+		return fmt.Errorf("call api error")
+	}
+
+  if err := m.repo.BatchUnTagging(c, appId, ids, id); err != nil {
+		m.log.Error("batch UnTagging error", zap.Error(err))
+		return fmt.Errorf("batch UnTagging error")
+	}
+
+  return nil
+}
+
+func (m *MPMemberUsecase) BatchTagging(c context.Context, appId string, ids []string, id int64) error {
+  mpIdVar := c.Value("MP_ID")
+	if mpIdVar == nil {
+		m.log.Error("get mp id error")
+		return fmt.Errorf("get mp id error")
+	}
+	mpId := mpIdVar.(string)
+
+	token, err := m.apiProxy.GetAccessToken(c, appId, mpId)
+	if err != nil {
+		m.log.Error("get access token error", zap.Error(err))
+		return fmt.Errorf("get access token error")
+	}
+
+	params := v1.BatchTaggingMembersRequest{
+		AccessToken: token,
+		Id:          id,
+		OpenidList:  ids,
+	}
+	wxErr, err := m.apiProxy.cli.BatchTaggingMembers(c, &params)
+  if err != nil {
+		return err
+	}
+	if wxErr != nil && wxErr.Errcode != 0 {
+		m.log.Error("api error", zap.Any("return", wxErr))
+		return fmt.Errorf("call api error")
+	}
+
+  if err := m.repo.BatchTagging(c, appId, ids, id); err != nil {
+		m.log.Error("batch Tagging error", zap.Error(err))
+		return fmt.Errorf("batch Tagging error")
+	}
+
+  return nil
+}
+
 func (m *MPMemberUsecase) BatchUnblock(c context.Context, appId string, openids []string) error {
-	// TODO: 微信接口调用
+	mpIdVar := c.Value("MP_ID")
+	if mpIdVar == nil {
+		m.log.Error("get mp id error")
+		return fmt.Errorf("get mp id error")
+	}
+	mpId := mpIdVar.(string)
+
+	token, err := m.apiProxy.GetAccessToken(c, appId, mpId)
+	if err != nil {
+		m.log.Error("get access token error", zap.Error(err))
+		return fmt.Errorf("get access token error")
+	}
+
+	params := v1.BlockMemberReq{
+		AccessToken: token,
+		OpenIds:     openids,
+	}
+	wxErr, err := m.apiProxy.cli.UnBlockMember(c, &params)
+	if err != nil {
+		return err
+	}
+	if wxErr != nil && wxErr.Errcode != 0 {
+		m.log.Error("api error", zap.Any("return", wxErr))
+		return fmt.Errorf("call api error")
+	}
 
 	if err := m.blackListRepo.Unblock(c, appId, openids); err != nil {
 		m.log.Error("unblock member error", zap.Error(err))
@@ -41,25 +142,31 @@ func (m *MPMemberUsecase) BatchUnblock(c context.Context, appId string, openids 
 }
 
 func (m *MPMemberUsecase) BatchBlock(c context.Context, appId string, openids []string) error {
-	// TODO: 微信接口调用
-	// app, err := GetAppInfoFromCtx(c)
-	// if err != nil {
-	// 	m.log.Error("get app info error", zap.Error(err))
-	// 	return fmt.Errorf("get app info error")
-	// }
-	// mpId := app.MpId
-	// accessToken, err := m.apiProxy.GetAccessToken(c, appId, mpId)
-	// if err != nil {
-	// 	m.log.Error("get access token error", zap.Error(err))
-	// 	return fmt.Errorf("get access token error")
-	// }
-	// if wxErr, err := m.apiProxy.cli.GetMemberTags(c, &v1.BatchBlockRequest{
-	//   AccessToken: accessToken,
-	//   Openids: openids,
-	// }); err != nil || wxErr.Errcode != 0 {
-	// 	m.log.Error("batch block member error", zap.Error(err), zap.Any("wxErr", wxErr))
-	// 	return fmt.Errorf("batch block member error")
-	// }
+	mpIdVar := c.Value("MP_ID")
+	if mpIdVar == nil {
+		m.log.Error("get mp id error")
+		return fmt.Errorf("get mp id error")
+	}
+	mpId := mpIdVar.(string)
+
+	token, err := m.apiProxy.GetAccessToken(c, appId, mpId)
+	if err != nil {
+		m.log.Error("get access token error", zap.Error(err))
+		return fmt.Errorf("get access token error")
+	}
+
+	params := v1.BlockMemberReq{
+		AccessToken: token,
+		OpenIds:     openids,
+	}
+	wxErr, err := m.apiProxy.cli.BlockMember(c, &params)
+	if err != nil {
+		return err
+	}
+	if wxErr != nil && wxErr.Errcode != 0 {
+		m.log.Error("api error", zap.Any("return", wxErr))
+		return fmt.Errorf("call api error")
+	}
 
 	if err := m.blackListRepo.Block(c, appId, openids); err != nil {
 		m.log.Error("block member error", zap.Error(err))
@@ -113,12 +220,16 @@ func (m *MPMemberUsecase) UpdateRemark(c context.Context, appId, id, openId, rem
 	return nil
 }
 
-func (m *MPMemberUsecase) GetMemberInfo(c context.Context, appId string, id string) (*entities.MPMember, error) {
+func (m *MPMemberUsecase) GetMemberInfo(c context.Context,
+	appId string, id string,
+) (*entities.MPMember, error) {
 	return m.repo.FindById(c, id)
 }
 
-func (m *MPMemberUsecase) Query(c context.Context, appId string) ([]*entities.MPMember, error) {
-	docs, err := m.repo.FindByAppId(c, appId)
+func (m *MPMemberUsecase) Query(c context.Context, appId string,
+	params *request.MPMemberQuery,
+) (*model.PageResult[*entities.MPMember], error) {
+	docs, err := m.repo.Find(c, appId, params)
 	if err != nil {
 		m.log.Error("query member error", zap.Error(err))
 		return nil, fmt.Errorf("query member error")
@@ -263,13 +374,13 @@ func (m *MPMemberUsecase) Pull(c context.Context, appId string) error {
 
 	// 分批拉取粉丝信息
 	batchSize := 100
-	for i := 0; i < len(memberIds); i+= batchSize {
+	for i := 0; i < len(memberIds); i += batchSize {
 		end := i + batchSize
 		if end > len(memberIds) {
 			end = len(memberIds)
 		}
 		members, err := fetchMemberInfoFn(memberIds[i:end])
-		if err!= nil {
+		if err != nil {
 			m.log.Error("fetch member info error", zap.Error(err))
 			return fmt.Errorf("fetch member info error")
 		}
@@ -277,7 +388,7 @@ func (m *MPMemberUsecase) Pull(c context.Context, appId string) error {
 			continue
 		}
 		// 保存粉丝信息
-		if err := m.repo.Save(c, members); err!= nil {
+		if err := m.repo.Save(c, members); err != nil {
 			m.log.Error("save member error", zap.Error(err))
 			return fmt.Errorf("save member error")
 		}
@@ -286,6 +397,8 @@ func (m *MPMemberUsecase) Pull(c context.Context, appId string) error {
 	return nil
 }
 
-func NewMPMemberUsecase(log *zap.Logger, repo MPMemberRepo, apiProxy *APIProxyUsecase) *MPMemberUsecase {
-	return &MPMemberUsecase{repo: repo, log: log, apiProxy: apiProxy}
+func NewMPMemberUsecase(log *zap.Logger, repo MPMemberRepo,
+	apiProxy *APIProxyUsecase, block MPBlackListRepo,
+) *MPMemberUsecase {
+	return &MPMemberUsecase{repo: repo, log: log, apiProxy: apiProxy, blackListRepo: block}
 }

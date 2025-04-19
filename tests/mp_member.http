@@ -8,3 +8,65 @@
 POST {{host}}/apps/{{pid}}/members/pull
 Content-Type: application/json
 Authorization: Bearer {{token}}
+
+###
+# @name GetMembers
+GET {{host}}/apps/{{pid}}/members?page_no=1&page_size=10
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+###
+# @name GetBlacklist
+POST {{host}}/apps/{{pid}}/members/blacklist/list
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+###
+# @name BlockMember
+POST {{host}}/apps/{{pid}}/members/blacklist/block
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "openids": [
+    "olnBK7IkIVxh4kdFF8jv3C0TRXqs"
+  ]
+}
+
+###
+# @name UnBlockMember
+POST {{host}}/apps/{{pid}}/members/blacklist/unblock
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "openids": [
+    "olnBK7IkIVxh4kdFF8jv3C0TRXqs"
+  ]
+}
+
+###
+# @name TaggingMember
+POST {{host}}/apps/{{pid}}/members/tags
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "openids": [
+    "olnBK7IkIVxh4kdFF8jv3C0TRXqs"
+  ],
+  "tagid": 102
+}
+
+###
+# @name UnTaggingMember
+DELETE {{host}}/apps/{{pid}}/members/tags
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "openids": [
+    "olnBK7IkIVxh4kdFF8jv3C0TRXqs"
+  ],
+  "tagid": 110
+}

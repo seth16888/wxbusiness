@@ -16,3 +16,11 @@ func GetLimitOffset(pageNum int, pageSize int) (offset int, limit int) {
 	limit = pageSize
 	return
 }
+
+// NewPageResult 构造函数，用于创建一个新的 PageResult 实例。
+func NewPageResult[T any]() *PageResult[T] {
+	return &PageResult[T]{
+		List:  make([]T, 0),
+		Total: 0,
+	}
+}
