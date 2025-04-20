@@ -90,6 +90,7 @@ func registerRoutes(r *gin.Engine, deps *di.Container) {
 					memberGrp.POST("/blacklist/list", memberCtr.GetBlackList)
 					memberGrp.POST("/blacklist/block", memberCtr.BatchBlock)
 					memberGrp.POST("/blacklist/unblock", memberCtr.BatchUnblock)
+          memberGrp.POST("/blacklist/pull", memberCtr.PullBlackList)
 					memberGrp.POST("/pull", memberCtr.Pull)
 				}
 				// v1/apps/:id/materials

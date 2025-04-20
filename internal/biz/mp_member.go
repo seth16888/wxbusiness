@@ -18,8 +18,8 @@ type MPMemberRepo interface {
 	FindById(c context.Context, id string) (*entities.MPMember, error)
 	UpdateRemark(c context.Context, id, remark string) error
 	Save(c context.Context, members []*entities.MPMember) error // 存在则更新，不存在则创建
-  BatchTagging(c context.Context, appId string, ids []string, tagId int64) error
-  BatchUnTagging(c context.Context, appId string, ids []string, tagId int64) error
+	BatchTagging(c context.Context, appId string, ids []string, tagId int64) error
+	BatchUnTagging(c context.Context, appId string, ids []string, tagId int64) error
 }
 
 type MPBlackListRepo interface {
@@ -33,6 +33,79 @@ type MPMemberUsecase struct {
 	blackListRepo MPBlackListRepo
 	log           *zap.Logger
 	apiProxy      *APIProxyUsecase
+}
+
+func (m *MPMemberUsecase) PullBlackList(c context.Context, appId string) error {
+	mpIdVar := c.Value("MP_ID")
+	if mpIdVar == nil {
+		m.log.Error("get mp id error")
+		return fmt.Errorf("get mp id error")
+	}
+	mpId := mpIdVar.(string)
+
+	token, err := m.apiProxy.GetAccessToken(c, appId, mpId)
+	if err != nil {
+		m.log.Error("get access token error", zap.Error(err))
+		return fmt.Errorf("get access token error")
+	}
+
+  // 拉取微信黑名单
+	// 数量超过 1000 时，可通过填写 next_openid 的值
+	fetchOpenIdFn := func(nextOpenid string) ([]string, string, error) {
+		openids := make([]string, 0, 1000)
+		req := v1.GetBlacklistReq{
+			AccessToken: token,
+			NextOpenid:  nextOpenid, // 下一个拉取的openid，不填默认从头开始拉取
+		}
+		res, err := m.apiProxy.cli.GetBlacklist(c, &req)
+		if err != nil {
+			m.log.Error("get black list error", zap.Error(err))
+			return nil, "", fmt.Errorf("get black list error")
+		}
+
+		m.log.Debug("get black list", zap.Int64("total", res.Total), zap.Int64("count", res.Count))
+		if res.Count > 0 {
+			if res.OpenIDs != nil {
+				for _, openid := range res.OpenIDs {
+					openids = append(openids, openid)
+				}
+			}
+		} else {
+			m.log.Debug("no member")
+		}
+
+		if res.Count < 1000 { // 少于1000条，说明已经拉取完了
+			return openids, "", nil
+		}
+		return openids, res.NextOpenid, nil
+	}
+
+  memberIds := make([]string, 0, 1000)
+	nextOpenid := ""
+	for {
+		openids, next, err := fetchOpenIdFn(nextOpenid)
+		if err != nil {
+			m.log.Error("fetch blacklist error", zap.Error(err))
+			return fmt.Errorf("fetch blacklist error")
+		}
+		if len(openids) == 0 {
+			break
+		}
+		memberIds = append(memberIds, openids...)
+		if next == "" {
+			break
+		}
+		nextOpenid = next
+	}
+	m.log.Debug("get blacklist ids", zap.Int("count", len(memberIds)))
+
+  // 拉黑
+	if err := m.blackListRepo.Block(c, appId, memberIds); err != nil {
+		m.log.Error("save blacklist error", zap.Error(err))
+		return fmt.Errorf("save blacklist error")
+	}
+
+	return nil
 }
 
 func (m *MPMemberUsecase) BatchUnTagging(c context.Context, appId string, ids []string, id int64) error {
@@ -55,7 +128,7 @@ func (m *MPMemberUsecase) BatchUnTagging(c context.Context, appId string, ids []
 		OpenidList:  ids,
 	}
 	wxErr, err := m.apiProxy.cli.BatchUnTaggingMembers(c, &params)
-  if err != nil {
+	if err != nil {
 		return err
 	}
 	if wxErr != nil && wxErr.Errcode != 0 {
@@ -63,16 +136,16 @@ func (m *MPMemberUsecase) BatchUnTagging(c context.Context, appId string, ids []
 		return fmt.Errorf("call api error")
 	}
 
-  if err := m.repo.BatchUnTagging(c, appId, ids, id); err != nil {
+	if err := m.repo.BatchUnTagging(c, appId, ids, id); err != nil {
 		m.log.Error("batch UnTagging error", zap.Error(err))
 		return fmt.Errorf("batch UnTagging error")
 	}
 
-  return nil
+	return nil
 }
 
 func (m *MPMemberUsecase) BatchTagging(c context.Context, appId string, ids []string, id int64) error {
-  mpIdVar := c.Value("MP_ID")
+	mpIdVar := c.Value("MP_ID")
 	if mpIdVar == nil {
 		m.log.Error("get mp id error")
 		return fmt.Errorf("get mp id error")
@@ -91,7 +164,7 @@ func (m *MPMemberUsecase) BatchTagging(c context.Context, appId string, ids []st
 		OpenidList:  ids,
 	}
 	wxErr, err := m.apiProxy.cli.BatchTaggingMembers(c, &params)
-  if err != nil {
+	if err != nil {
 		return err
 	}
 	if wxErr != nil && wxErr.Errcode != 0 {
@@ -99,12 +172,12 @@ func (m *MPMemberUsecase) BatchTagging(c context.Context, appId string, ids []st
 		return fmt.Errorf("call api error")
 	}
 
-  if err := m.repo.BatchTagging(c, appId, ids, id); err != nil {
+	if err := m.repo.BatchTagging(c, appId, ids, id); err != nil {
 		m.log.Error("batch Tagging error", zap.Error(err))
 		return fmt.Errorf("batch Tagging error")
 	}
 
-  return nil
+	return nil
 }
 
 func (m *MPMemberUsecase) BatchUnblock(c context.Context, appId string, openids []string) error {

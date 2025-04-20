@@ -240,7 +240,7 @@ func (h *MPMemberHandler) BatchTagging(ctx *gin.Context) {
 
 // BatchUnTagging 批量为粉丝取消标签
 func (h *MPMemberHandler) BatchUnTagging(ctx *gin.Context) {
-  	// 路径参数
+	// 路径参数
 	appId, err := h.GetPID(ctx)
 	if err != nil {
 		ctx.JSON(400, r.Error(400, err.Error()))
@@ -260,6 +260,25 @@ func (h *MPMemberHandler) BatchUnTagging(ctx *gin.Context) {
 	if err := h.uc.BatchUnTagging(c, appId, params.OpenIds, params.TagId); err != nil {
 		h.log.Error("batch tagging error", zap.Error(err))
 		ctx.JSON(500, r.Error(500, "批量为粉丝打标签失败"))
+		return
+	}
+
+	ctx.JSON(200, r.Success())
+}
+
+// PullBlackList
+func (h *MPMemberHandler) PullBlackList(ctx *gin.Context) {
+	// 路径参数
+	appId, err := h.GetPID(ctx)
+	if err!= nil {
+		ctx.JSON(400, r.Error(400, err.Error()))
+		return
+	}
+
+	c := ctx
+	if err := h.uc.PullBlackList(c, appId); err!= nil {
+		h.log.Error("pull black list error", zap.Error(err))
+		ctx.JSON(500, r.Error(500, "同步微信黑名单失败"))
 		return
 	}
 

@@ -70,3 +70,9 @@ Authorization: Bearer {{token}}
   ],
   "tagid": 110
 }
+
+###
+# @name PullBlacklist
+POST {{host}}/apps/{{pid}}/members/blacklist/pull
+Content-Type: application/json
+Authorization: Bearer {{token}}
