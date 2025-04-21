@@ -101,6 +101,8 @@ func registerRoutes(r *gin.Engine, deps *di.Container) {
 					materialGrp.POST("/news_image", maCtr.UploadNewsImage)
 					materialGrp.POST("/limit", maCtr.UploadMedia)
 					materialGrp.POST("/list", maCtr.GetMaterialList)
+					materialGrp.DELETE("/:mediaId", maCtr.DeleteMaterial)
+          materialGrp.POST("/pull", maCtr.Pull)
 				}
         qrcodeGrp := appGrp.Group("/qrcode")
         {

@@ -9,6 +9,7 @@ import (
 	"github.com/seth16888/wxbusiness/internal/server"
 	"github.com/seth16888/wxbusiness/pkg/jwt"
 	"github.com/seth16888/wxbusiness/pkg/validator"
+	"github.com/seth16888/wxcommon/hc"
 	ak "github.com/seth16888/wxtoken/api/v1"
 	"go.uber.org/zap"
 )
@@ -43,5 +44,6 @@ type Container struct {
 	MemberTagUsecase *biz.MemberTagUsecase
 	MPMemberUsecase  *biz.MPMemberUsecase
 	MaterialUsecase  *biz.MaterialUsecase
-  MpQRCodeUsecase  *biz.MpQRCodeUsecase
+	MpQRCodeUsecase  *biz.MpQRCodeUsecase
+	HttpClient       *hc.Client
 }

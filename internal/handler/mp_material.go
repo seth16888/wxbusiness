@@ -87,15 +87,15 @@ func (h *MaterialHandler) UploadTemporaryMedia(ctx *gin.Context) {
 
 	// 保存文件
   filename := helpers.UUID() + ext
-	dst := path.Join("uploads", filename)
-	if err = ctx.SaveUploadedFile(file, dst); err != nil {
+	filePath := path.Join("uploads", filename)
+	if err = ctx.SaveUploadedFile(file, filePath); err != nil {
 		ctx.JSON(500, r.Error(500, "save file error"))
 		return
 	}
 
   // 上传到微信
   c := ctx
-  res, err := h.uc.UploadTemporaryMedia(c, appId, mediaType, filename, dst)
+  res, err := h.uc.UploadTemporaryMedia(c, appId, mediaType, filename, filePath)
   if err!= nil {
     ctx.JSON(500, r.Error(500, err.Error()))
     return
@@ -281,4 +281,62 @@ func (h *MaterialHandler) GetMaterialList(ctx *gin.Context) {
     return
   }
   ctx.JSON(200, r.SuccessData(res))
+}
+
+// DeleteMaterial 删除素材
+func (h *MaterialHandler) DeleteMaterial(ctx *gin.Context) {
+  // 路径参数
+	appId, err := h.GetPID(ctx)
+	if err!= nil {
+		ctx.JSON(400, r.Error(400, err.Error()))
+		return
+	}
+  // 路径参数
+  mediaId := ctx.Param("mediaId")
+  if mediaId == "" {
+    ctx.JSON(400, r.Error(400, "media_id not found"))
+  }
+
+  c:=ctx
+  err = h.uc.DeleteMaterial(c, appId, mediaId)
+  if err!= nil {
+    ctx.JSON(500, r.Error(500, err.Error()))
+    return
+  }
+  ctx.JSON(200, r.Success())
+}
+
+// Pull 拉取永久素材
+//
+// type: 图片（image）、视频（video）、语音 （voice）、图文（news）,
+// offset: 从全部素材的该偏移位置开始返回，0表示从第一个素材 返回,
+// count: 返回素材的数量，取值在1到20之间
+func (h *MaterialHandler) Pull(ctx *gin.Context) {
+  // 路径参数
+  appId, err := h.GetPID(ctx)
+  if err!= nil {
+    ctx.JSON(400, r.Error(400, err.Error()))
+    return
+  }
+  var req request.PullMaterialReq
+  if err := ctx.ShouldBindJSON(&req); err!= nil {
+    ctx.JSON(400, r.Error(400, err.Error()))
+    return
+  }
+  if req.Type != "image" && req.Type!= "video" && req.Type!= "voice" && req.Type!= "news" {
+    ctx.JSON(400, r.Error(400, "type not allowed"))
+    return
+  }
+  if req.Count < 1 || req.Count > 20 {
+    ctx.JSON(400, r.Error(400, "count not in 1-20"))
+    return
+  }
+
+  c:=ctx
+  err = h.uc.Pull(c, appId, &req)
+  if err!= nil {
+    ctx.JSON(500, r.Error(500, err.Error()))
+    return
+  }
+  ctx.JSON(200, r.Success())
 }

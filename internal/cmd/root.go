@@ -10,6 +10,7 @@ import (
 	"github.com/seth16888/wxbusiness/internal/data"
 	"github.com/seth16888/wxbusiness/internal/di"
 	"github.com/seth16888/wxbusiness/pkg/validator"
+	"github.com/seth16888/wxcommon/hc"
 	"github.com/spf13/cobra"
 )
 
@@ -40,6 +41,9 @@ var rootCmd = &cobra.Command{
 
 		di.Get().Conf = conf
 		di.Get().Log = log
+
+		di.Get().HttpClient = hc.NewClient(10*time.Second,
+			3*time.Minute, hc.CommonCheckRedirect)
 
 		return nil
 	},
@@ -100,12 +104,13 @@ var rootCmd = &cobra.Command{
 		di.Get().MemberTagUsecase = tagUc
 
 		memberRepo := data.NewMPMemberData(di.Get().DB, di.Get().Log)
-    blockRepo := data.NewMPBlackListData(di.Get().DB, di.Get().Log)
+		blockRepo := data.NewMPBlackListData(di.Get().DB, di.Get().Log)
 		memberUc := biz.NewMPMemberUsecase(di.Get().Log, memberRepo, apiProxy, blockRepo)
 		di.Get().MPMemberUsecase = memberUc
 
 		materialRepo := data.NewMPMaterialData(di.Get().DB, di.Get().Log)
-		materialUc := biz.NewMaterialUsecase(di.Get().Log, materialRepo)
+		materialUc := biz.NewMaterialUsecase(di.Get().Log, materialRepo, apiProxy,
+			di.Get().HttpClient)
 		di.Get().MaterialUsecase = materialUc
 
 		qrcodeUc := biz.NewMpQRCodeUsecase(di.Get().Log, platformAppRepo, tokenProxy, apiProxy)
