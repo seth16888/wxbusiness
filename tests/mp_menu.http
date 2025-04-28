@@ -42,3 +42,21 @@ Authorization: Bearer {{token}}
     }
   ]
 }
+
+###
+# @name PullMenu
+POST {{host}}/apps/{{pid}}/menu/pull
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+###
+# @name GetMenuInfo
+GET {{host}}/apps/{{pid}}/menu
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+###
+# @name DeleteMenu
+DELETE {{host}}/apps/{{pid}}/menu
+Content-Type: application/json
+Authorization: Bearer {{token}}

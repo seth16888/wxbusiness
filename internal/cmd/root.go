@@ -87,7 +87,8 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 		apiProxy := biz.NewAPIProxyUsecase(apiProxyClient, di.Get().Log, gRPCTimeout, tokenProxy)
-		menuUsecase := biz.NewMPMenuUsecase(platformAppRepo, tokenProxy, apiProxy, di.Get().Log)
+    menuRepo := data.NewMPMenuData(di.Get().Log, di.Get().DB)
+		menuUsecase := biz.NewMPMenuUsecase(platformAppRepo, tokenProxy, apiProxy, di.Get().Log, menuRepo)
 		di.Get().MenuUsecase = menuUsecase
 
 		coAuthClient, err := bootstrap.InitAuthClient(di.Get().Conf.CoAuthServer.Addr)

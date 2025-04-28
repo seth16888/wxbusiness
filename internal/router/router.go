@@ -65,7 +65,12 @@ func registerRoutes(r *gin.Engine, deps *di.Container) {
 				menuGrp := appGrp.Group("/menu")
 				{
 					menuCtr := handler.NewMPMenuHandler(deps.Log, deps.MenuUsecase)
+          menuGrp.GET("", menuCtr.GetMenuInfo)
 					menuGrp.POST("", menuCtr.Create)
+          menuGrp.DELETE("", menuCtr.Delete)
+          menuGrp.POST("/conditional", menuCtr.CreateConditional)
+          menuGrp.DELETE("/conditional", menuCtr.DeleteConditional)
+          menuGrp.POST("/pull", menuCtr.Pull)
 				}
 				// v1/apps/:id/tags
 				tagGrp := appGrp.Group("/tags")
