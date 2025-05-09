@@ -11,8 +11,8 @@ Authorization: Bearer {{token}}
   "name": "test-app",
   "introduction": "gh_9aaf412a5483,This is a test app",
   "picUrl": "https://example.com",
-  "appId": "wx4c187683539f414d",
-  "appSecret": "7fb747052d1f2055413fa6eb0fbe0944",
+  "appId": "",
+  "appSecret": "",
   "type": 1
 }
 
@@ -27,8 +27,8 @@ Authorization: Bearer {{token}}
   "name": "蓝鲸小精灵",
   "introduction": "gh_28b76d98bc00,蓝鲸小精灵",
   "picUrl": "https://wx.qlogo.cn/mmopen/JCrT0AX1L5ibricJKIia0O48pibBicpJ9p2WfwQNmmicJRULyxo6XSJnBs11SgrCVVKQIDoR0iasNqhFLJibuQ8VCIrSPyRr19Jiau2os/64",
-  "appId": "wx6898b2ec34091597",
-  "appSecret": "da5a265561ed02903fdf7bc923026c2c",
+  "appId": "",
+  "appSecret": "",
   "type": 1
 }
 
